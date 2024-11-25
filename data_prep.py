@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 
 import torch
 
+from torch.utils.data import Dataset
+
 from datasets import load_dataset
 
 # Graph directory to save all figures
@@ -80,6 +82,21 @@ def get_labels(dataset, split, plot = True):
 train_labels, train_counts = get_labels(dataset=ds_train, split="train")
 test_labels, test_counts = get_labels(dataset=ds_test, split="test")
 valid_labels, valid_counts = get_labels(dataset=ds_valid, split="validation")
+
+# Label lists
+train_labellist = np.array( [ ds_train[k]["label"] for k in range(len(ds_train)) ] )
+test_labellist = np.array( [ ds_test[k]["label"] for k in range(len(ds_test)) ] )
+valid_labellist = np.array( [ ds_valid[k]["label"] for k in range(len(ds_valid)) ] )
+
+# Convert these to tensors
+train_labellist_tensor = torch.from_numpy(train_labellist)
+test_labellist_tensor = torch.from_numpy(test_labellist)
+valid_labellist_tensor = torch.from_numpy(valid_labellist)
+
+# Save the label tensors
+torch.save(train_labellist_tensor, tensor_dir + "train_labels.pt")
+torch.save(test_labellist_tensor, tensor_dir + "test_labels.pt")
+torch.save(valid_labellist_tensor, tensor_dir + "valid_labels.pt")
 
 # Obtain statistics of each dataset
 def get_stats(dataset, splitting=" "):
@@ -161,6 +178,7 @@ def tokenizer(dataset_split, vocab=vocab, padding_len=padding_len):
 train_tokenized = tokenizer(train_split)
 test_tokenized = tokenizer(test_split)
 valid_tokenized = tokenizer(valid_split)
+
 # Convert these into numpy arrays
 train_tokenized = np.array(train_tokenized)
 test_tokenized = np.array(test_tokenized)
@@ -175,3 +193,19 @@ vaid_tensor = torch.from_numpy(valid_tokenized)
 torch.save(train_tensor, tensor_dir + "train.pt")
 torch.save(test_tensor, tensor_dir + "test.pt")
 torch.save(valid_tokenized, tensor_dir + "valid.pt")
+
+# Dataset class for loading sentences alongside their label
+class TextDataset(Dataset):
+    # Initialization function
+    def __init__(self, dataset, labels):
+        super().__init__()
+        # Define dataset and labels items
+        self.dataset = dataset
+        self.labels = labels
+        return
+    # Get length of entire dataset
+    def __len__(self):
+        return len(self.dataset)
+    # Get padded, tokenized sentence along with its label
+    def __getitem__(self, index):
+        return self.dataset[index], self.labels[index]
