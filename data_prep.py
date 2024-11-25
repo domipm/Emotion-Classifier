@@ -154,7 +154,6 @@ padding_len = np.max((train_stats[3], test_stats[3], valid_stats[3]))
 # dataset_split refers to the already-split (by " " blank space) dataset
 def tokenizer(dataset_split, vocab=vocab, padding_len=padding_len):
     "Function that tokenizes complete dataset into sequences of tokens (integers)"
-
     dataset_tokenized = []
     # For each sentence, indexed by k with list of string sentence
     for sentence in dataset_split:
@@ -175,16 +174,16 @@ def tokenizer(dataset_split, vocab=vocab, padding_len=padding_len):
     # Return tokenized dataset
     return dataset_tokenized
 
+# Convert each dataset split into final tensors (just to check it works)
+
 # Tokenize all three datasets
 train_tokenized = tokenizer(train_split)
 test_tokenized = tokenizer(test_split)
 valid_tokenized = tokenizer(valid_split)
-
 # Convert these into numpy arrays
 train_tokenized = np.array(train_tokenized)
 test_tokenized = np.array(test_tokenized)
 valid_tokenized = np.array(valid_tokenized)
-
 # Convert each tokenized dataset into a tensor
 train_tensor = torch.from_numpy(train_tokenized)
 test_tensor = torch.from_numpy(test_tokenized)
@@ -214,14 +213,14 @@ class TextDataset(Dataset):
         label = torch.tensor(label, dtype=torch.long)
         # Split text into words
         text = text.split(" ")
-        # Convert each word into integer using vocab
+        # Convert each word into integer using vocab (from train set), with padding previously calculated
         text = self.tokenize(text)
         # Convert tokenized text into a tensor
         text = torch.from_numpy(text)
         # Return tokenized text and label
         return text, label
-    
-    def tokenize(self, sentence, vocab, padding_len):
+
+    def tokenize(self, sentence):
         "Function to tokenize single sentence"
         sentence_tokenized = []
         # For each word in this sentence
