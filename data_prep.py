@@ -1,4 +1,5 @@
 # Script to perform all necessary data preparation
+# This also includes dataset class at the end
 
 import numpy as np
 import pandas as pd
@@ -11,9 +12,7 @@ from torch.utils.data import Dataset
 from datasets import load_dataset
 
 # Graph directory to save all figures
-graph_dir = "./visualizations/"
-# Tensor directory
-tensor_dir = "./tensors/"
+out_dir = "./data_prep/"
 
 # Load the dataset to use
 ds = load_dataset("dair-ai/emotion", "split")
@@ -73,7 +72,7 @@ def get_labels(dataset, split, plot = True):
         plt.title(split + " split label class distribution")
         plt.xlabel("Label")
         plt.ylabel("Occurrence [%]")
-        plt.savefig(graph_dir + split + "_distr.png", dpi=300, bbox_inches="tight")
+        plt.savefig(out_dir + split + "_distr.png", dpi=300, bbox_inches="tight")
         plt.close()
 
     return labels, counts
@@ -92,11 +91,6 @@ valid_labellist = np.array( [ ds_valid[k]["label"] for k in range(len(ds_valid))
 train_labellist_tensor = torch.from_numpy(train_labellist)
 test_labellist_tensor = torch.from_numpy(test_labellist)
 valid_labellist_tensor = torch.from_numpy(valid_labellist)
-
-# Save the label tensors
-torch.save(train_labellist_tensor, tensor_dir + "train_labels.pt")
-torch.save(test_labellist_tensor, tensor_dir + "test_labels.pt")
-torch.save(valid_labellist_tensor, tensor_dir + "valid_labels.pt")
 
 # Obtain statistics of each dataset
 def get_stats(dataset, splitting=" "):
@@ -137,15 +131,22 @@ ax.set_xticks(x + width, splits)
 # Save figure
 plt.title("Dataset split statistics")
 plt.legend()
-plt.savefig(graph_dir + "data_stats.png", dpi=300, bbox_inches="tight")
+plt.savefig(out_dir + "data_stats.png", dpi=300, bbox_inches="tight")
 plt.close()
 
 # Get all words in train dataset as one-dimensional list
 all_words = [word for sentence in train_split for word in sentence]
+# Get all unique, sorted word list in train dataset
+all_words = sorted(list(set(all_words)))
 # Construct dictionary out of this list: vocabulary of dataset
 vocab = {word: index for index, word in enumerate(all_words, start=1)}
 # Add padding token (PAD) and not-a-word token (NAW)
 vocab.update({"PAD": 0, "NAW": -1})
+
+# Save vocabulary as json file
+import json
+with open(out_dir + "vocab.json", "w") as f:
+    f.write(json.dumps(vocab))
 
 # Define padding length (as maximum sentence lenght of all datasets)
 padding_len = np.max((train_stats[3], test_stats[3], valid_stats[3]))
@@ -156,7 +157,7 @@ def tokenizer(dataset_split, vocab=vocab, padding_len=padding_len):
 
     dataset_tokenized = []
     # For each sentence, indexed by k with list of string sentence
-    for k, sentence in enumerate(dataset_split):
+    for sentence in dataset_split:
         sentence_tokenized = []
         # For each word in this sentence
         for word in sentence:
@@ -189,23 +190,50 @@ train_tensor = torch.from_numpy(train_tokenized)
 test_tensor = torch.from_numpy(test_tokenized)
 vaid_tensor = torch.from_numpy(valid_tokenized)
 
-# Save tensors into file (so we can load them in model script)
-torch.save(train_tensor, tensor_dir + "train.pt")
-torch.save(test_tensor, tensor_dir + "test.pt")
-torch.save(valid_tokenized, tensor_dir + "valid.pt")
-
-# Dataset class for loading sentences alongside their label
+# Dataset class
 class TextDataset(Dataset):
+    
     # Initialization function
-    def __init__(self, dataset, labels):
+    def __init__(self, dataset):
+        # Initialize parent modules
         super().__init__()
-        # Define dataset and labels items
+        # Define dataset
         self.dataset = dataset
-        self.labels = labels
         return
-    # Get length of entire dataset
+    
+    # Return length of dataset (number of sentences)
     def __len__(self):
         return len(self.dataset)
-    # Get padded, tokenized sentence along with its label
+    
+    # Return tokenized and padded text along with its label
     def __getitem__(self, index):
-        return self.dataset[index], self.labels[index]
+        # Load text and label from dataset
+        text = self.dataset[index]["text"]
+        label = self.dataset[index]["label"]
+        # Convert label to tensor object
+        label = torch.tensor(label, dtype=torch.long)
+        # Split text into words
+        text = text.split(" ")
+        # Convert each word into integer using vocab
+        text = self.tokenize(text)
+        # Convert tokenized text into a tensor
+        text = torch.from_numpy(text)
+        # Return tokenized text and label
+        return text, label
+    
+    def tokenize(self, sentence, vocab, padding_len):
+        "Function to tokenize single sentence"
+        sentence_tokenized = []
+        # For each word in this sentence
+        for word in sentence:
+            # Convert word into integer token using vocab
+            try: sentence_tokenized.append( vocab[word] )
+            # If word not in sentence, use NAW padding
+            except: sentence_tokenized.append( vocab["NAW"] )
+        # Apply padding if necessary
+        if len(sentence_tokenized) < padding_len:
+            # Calculate how many padding tokens to add at the end of sentence
+            pad = padding_len - len(sentence_tokenized)
+            sentence_tokenized += [ vocab["PAD"] ] * pad
+        # Return tokenized dataset
+        return np.array(sentence_tokenized)
