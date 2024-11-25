@@ -93,11 +93,6 @@ train_labellist_tensor = torch.from_numpy(train_labellist)
 test_labellist_tensor = torch.from_numpy(test_labellist)
 valid_labellist_tensor = torch.from_numpy(valid_labellist)
 
-# Save the label tensors
-torch.save(train_labellist_tensor, tensor_dir + "train_labels.pt")
-torch.save(test_labellist_tensor, tensor_dir + "test_labels.pt")
-torch.save(valid_labellist_tensor, tensor_dir + "valid_labels.pt")
-
 # Obtain statistics of each dataset
 def get_stats(dataset, splitting=" "):
 
