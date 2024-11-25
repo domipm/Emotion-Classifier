@@ -234,5 +234,7 @@ class TextDataset(Dataset):
             # Calculate how many padding tokens to add at the end of sentence
             pad = padding_len - len(sentence_tokenized)
             sentence_tokenized += [ vocab["PAD"] ] * pad
+        else: # Otherwise, truncate text
+            sentence_tokenized[:padding_len]
         # Return tokenized dataset
         return np.array(sentence_tokenized)
