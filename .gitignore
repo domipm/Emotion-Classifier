@@ -163,3 +163,4 @@ cython_debug/
 
 # VsCode
 tempCodeRunnerFile.py
+.DS_Store
