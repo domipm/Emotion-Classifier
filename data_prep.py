@@ -150,6 +150,8 @@ with open(out_dir + "vocab.json", "w") as f:
 
 # Define padding length (as maximum sentence lenght of all datasets)
 padding_len = np.max((train_stats[3], test_stats[3], valid_stats[3]))
+# Define padding length (as average sentence length)
+padding_len = int( np.average(( train_stats[0], test_stats[0], valid_stats[0] )) )
 
 # dataset_split refers to the already-split (by " " blank space) dataset
 def tokenizer(dataset_split, vocab=vocab, padding_len=padding_len):
@@ -169,6 +171,8 @@ def tokenizer(dataset_split, vocab=vocab, padding_len=padding_len):
             # Calculate how many padding tokens to add at the end of sentence
             pad = padding_len - len(sentence_tokenized)
             sentence_tokenized += [ vocab["PAD"] ] * pad
+        # Truncate all sentences to padded length
+        sentence_tokenized = sentence_tokenized[0:padding_len]
         # Append sentence to dataset
         dataset_tokenized.append(sentence_tokenized)
     # Return tokenized dataset
@@ -234,7 +238,7 @@ class TextDataset(Dataset):
             # Calculate how many padding tokens to add at the end of sentence
             pad = padding_len - len(sentence_tokenized)
             sentence_tokenized += [ vocab["PAD"] ] * pad
-        else: # Otherwise, truncate text
-            sentence_tokenized[:padding_len]
+        # Truncate all sentences to padded length
+        sentence_tokenized = sentence_tokenized[0:padding_len]
         # Return tokenized dataset
         return np.array(sentence_tokenized)
