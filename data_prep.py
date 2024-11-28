@@ -138,10 +138,10 @@ plt.close()
 all_words = [word for sentence in train_split for word in sentence]
 # Get all unique, sorted word list in train dataset
 all_words = sorted(list(set(all_words)))
-# Construct dictionary out of this list: vocabulary of dataset
-vocab = {word: index for index, word in enumerate(all_words, start=1)}
-# Add padding token (PAD) and not-a-word token (NAW)
-vocab.update({"PAD": 0, "NAW": -1})
+# Construct vocabulary, padding (PAD) and not-a-word (NAW) tokens
+vocab = {"PAD": 0, "NAW": 1}
+# Construct dictionary out of train dataset
+vocab.update( {word: index for index, word in enumerate(all_words, start=2)} )
 
 # Save vocabulary as json file
 import json
