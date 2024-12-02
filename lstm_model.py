@@ -70,11 +70,6 @@ class LSTM(nn.Module):
 
         return self.linout(final_hidden[-1])
 
-        # Last linear layer that outputs predictions for each class
-        x = self.linout(x)
-        # Return final tensor
-        return x
-
 # Load dataset
 ds = datasets.load_dataset("dair-ai/emotion", "split")
 # Obtain train split
@@ -186,7 +181,7 @@ for epoch in range(epochs):
     with torch.no_grad():
 
         for batch, (text, label) in enumerate(valid_loader):
-
+            
             # Output from model
             output = model(text)
 
