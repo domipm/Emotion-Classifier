@@ -1,7 +1,3 @@
-# Study why model makes certain prediction (we choose lstm only
-# due to time constraints). Why model makes prediciton, fail cases
-# Take text on the fly through terminal and perform analysis
-
 import numpy as np
 
 import datasets
