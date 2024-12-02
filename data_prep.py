@@ -242,3 +242,14 @@ class TextDataset(Dataset):
         sentence_tokenized = sentence_tokenized[0:padding_len]
         # Return tokenized dataset
         return np.array(sentence_tokenized)
+    
+    def show_original(self, index):
+        "Function to show original, non-tokenized sentence for given index"
+
+        # Load text and label from dataset
+        text = self.dataset[index]["text"]
+        label = self.dataset[index]["label"]
+        # Convert label index to string
+        label = int_to_label[label]
+        # Return text and label (strings)
+        return text, label
