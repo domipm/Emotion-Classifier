@@ -22,16 +22,16 @@ graph_dir = "./graphs/"
 batch_size = 16
 
 # Model hyperparameters
-embedding_dim = 64
-num_layers = 6
+embedding_dim = 128
+num_layers = 4
 num_heads = 8
-dropout_prob = 0.65
+dropout_prob = 0.6
 feedforward_dim = 512
 
 # Training hyperparameters
-epochs = 15
+epochs = 10
 learning_rate = 0.0005
-weight_decay = 0.00025
+weight_decay = 0.001
 
 # Transformer model
 class Transformer(nn.Module):
